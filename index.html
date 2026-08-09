@@ -7,72 +7,153 @@
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #111;
-    color: #fff;
-    text-align: center;
+    margin:0;
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
 }
 
 header {
-    background: #e63946;
-    padding: 20px;
-    font-size: 28px;
-    font-weight: bold;
+    background:#dc2626;
+    text-align:center;
+    padding:20px;
+}
+
+header img {
+    width:60px;
+    border-radius:50%;
 }
 
 .menu {
-    padding: 20px;
+    padding:20px;
 }
 
 .item {
-    background: #222;
-    margin: 10px;
-    padding: 15px;
-    border-radius: 10px;
+    background:#1e293b;
+    margin-bottom:20px;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.item img {
+    width:100%;
+    height:180px;
+    object-fit:cover;
+}
+
+.content {
+    padding:15px;
+    text-align:center;
 }
 
 .price {
-    color: #e63946;
-    font-weight: bold;
+    color:#22c55e;
+    font-size:18px;
 }
 
 button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background: #e63946;
-    border: none;
-    color: white;
-    border-radius: 5px;
+    background:#22c55e;
+    border:none;
+    padding:10px 20px;
+    margin-top:10px;
+    border-radius:8px;
+    color:white;
+}
+
+.admin-btn {
+    position:fixed;
+    bottom:15px;
+    right:15px;
+    background:black;
+    padding:10px;
+    border-radius:10px;
 }
 </style>
 
 </head>
 <body>
 
-<header>🍔 Yusuf Menü</header>
+<header>
+<img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+<h2>Yusuf Menü</h2>
+</header>
 
-<div class="menu">
+<div class="menu" id="menu"></div>
 
-<div class="item">
-<h2>Hamburger</h2>
-<p class="price">150₺</p>
-<button>Sipariş Ver</button>
-</div>
+<button class="admin-btn" onclick="adminGiris()">⚙️</button>
 
-<div class="item">
-<h2>Pilav</h2>
-<p class="price">80₺</p>
-<button>Sipariş Ver</button>
-</div>
+<script>
+let telefon = "905386270200";
 
-<div class="item">
-<h2>Ayran</h2>
-<p class="price">25₺</p>
-<button>Sipariş Ver</button>
-</div>
+// LOCAL STORAGE
+let menu = JSON.parse(localStorage.getItem("menu")) || [
+    {isim:"Hamburger", fiyat:"150₺", resim:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd"},
+    {isim:"Pilav", fiyat:"80₺", resim:"https://images.unsplash.com/photo-1604908176997-431d01a8a7c3"}
+];
 
-</div>
+function kaydet() {
+    localStorage.setItem("menu", JSON.stringify(menu));
+}
+
+function goster() {
+    let html="";
+    menu.forEach((x,i)=>{
+        html+=`
+        <div class="item">
+        <img src="${x.resim}">
+        <div class="content">
+        <h2>${x.isim}</h2>
+        <p class="price">${x.fiyat}</p>
+        <button onclick="siparis('${x.isim}')">Sipariş Ver</button>
+        </div>
+        </div>
+        `;
+    });
+    document.getElementById("menu").innerHTML=html;
+}
+
+function siparis(urun) {
+    let mesaj="Sipariş: "+urun;
+    window.open("https://wa.me/"+telefon+"?text="+mesaj);
+}
+
+// ADMIN PANEL
+function adminGiris() {
+    let sifre = prompt("Şifre:");
+    if(sifre==="1234") adminPanel();
+    else alert("Yanlış!");
+}
+
+function adminPanel() {
+    let secim = prompt(
+        "1- Ürün Ekle\n2- Ürün Sil\n3- Fiyat Değiştir"
+    );
+
+    if(secim=="1") {
+        let isim = prompt("Ürün adı:");
+        let fiyat = prompt("Fiyat:");
+        menu.push({isim,fiyat,resim:"https://images.unsplash.com/photo-1550547660-d9450f859349"});
+    }
+
+    if(secim=="2") {
+        let isim = prompt("Silinecek ürün:");
+        menu = menu.filter(x=>x.isim!=isim);
+    }
+
+    if(secim=="3") {
+        let isim = prompt("Ürün:");
+        let yeni = prompt("Yeni fiyat:");
+        menu.forEach(x=>{
+            if(x.isim==isim) x.fiyat=yeni;
+        });
+    }
+
+    kaydet();
+    goster();
+}
+
+goster();
+</script>
 
 </body>
 </html>
