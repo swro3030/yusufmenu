@@ -1,106 +1,79 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-
-<style>
-body { font-family: Arial; background: #eee; padding:20px; }
-.box { background:white; padding:20px; border-radius:10px; }
-input, button {
-    width:100%;
-    padding:10px;
-    margin:5px 0;
-}
-button {
-    background:#2e7d32;
-    color:white;
-    border:none;
-}
-.delete {
-    background:red;
-}
-.hidden {
-    display:none;
-}
-</style>
+<title>Admin</title>
 </head>
 
 <body>
 
-<div id="login" class="box">
-<h3>Admin Giriş</h3>
-<input type="password" id="pass" placeholder="Şifre">
+<h2>Admin Panel</h2>
+
+<input id="pass" placeholder="Şifre">
 <button onclick="login()">Giriş</button>
-</div>
 
-<div id="panel" class="box hidden">
-<h3>Menü Yönetimi</h3>
+<div id="panel" style="display:none">
 
-<input id="name" placeholder="Ürün adı">
-<input id="price" placeholder="Fiyat">
-<input id="category" placeholder="Kategori (örn: İçecek)">
-<input id="img" placeholder="Fotoğraf URL">
+<input id="name" placeholder="Ürün"><br>
+<input id="price" placeholder="Fiyat"><br>
+<input id="category" placeholder="Kategori"><br>
+<input type="file" id="file"><br><br>
+
 <button onclick="add()">Ekle</button>
 
+<hr>
+
 <div id="list"></div>
+
 </div>
 
-<script>
-let password = "1234";
+<script type="module">
+import { db, storage } from "./firebase.js";
+import { collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-function login(){
-    if(document.getElementById("pass").value === password){
-        document.getElementById("login").style.display = "none";
-        document.getElementById("panel").classList.remove("hidden");
-        render();
-    } else {
-        alert("Hatalı şifre!");
-    }
+window.login = function(){
+  if(pass.value=="1234"){
+    panel.style.display="block";
+  }
 }
 
-let data = JSON.parse(localStorage.getItem("menuData")) || [];
-
-function save(){
-    localStorage.setItem("menuData", JSON.stringify(data));
+async function upload(file){
+  const r = ref(storage,"menu/"+file.name);
+  await uploadBytes(r,file);
+  return await getDownloadURL(r);
 }
 
-function add(){
-    let item = {
-        name: document.getElementById("name").value,
-        price: document.getElementById("price").value,
-        category: document.getElementById("category").value,
-        img: document.getElementById("img").value
-    };
+window.add = async function(){
+  const file = document.getElementById("file").files[0];
+  const url = await upload(file);
 
-    if(!item.name⠞⠵⠵⠺⠞⠟⠞⠟⠟⠟⠟⠺⠺⠵⠵!item.category){
-        alert("Boş alan bırakma!");
-        return;
-    }
-
-    data.push(item);
-    save();
-    render();
+  await addDoc(collection(db,"menu"),{
+    name: name.value,
+    price: price.value,
+    category: category.value,
+    img: url
+  });
 }
 
-function del(i){
-    data.splice(i,1);
-    save();
-    render();
-}
+onSnapshot(collection(db,"menu"), (snap)=>{
+  let html="";
 
-function render(){
-    let list = document.getElementById("list");
-    list.innerHTML = "";
+  snap.forEach(d=>{
+    let i=d.data();
 
-    data.forEach((x,i)=>{
-        list.innerHTML += `
-        <div>
-            ${x.name} - ${x.price}₺ (${x.category})
-            <button class="delete" onclick="del(${i})">Sil</button>
-        </div>`;
-    });
+    html+=`
+    <div>
+      ${i.name} - ${i.price}
+      <button onclick="del('${d.id}')">Sil</button>
+    </div>`;
+  });
+
+  list.innerHTML=html;
+});
+
+window.del = async function(id){
+  await deleteDoc(doc(db,"menu",id));
 }
 </script>
 
